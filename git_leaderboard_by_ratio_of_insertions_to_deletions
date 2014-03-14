@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+
+# git log --author="Noah Sussman" --format="%an" --shortstat | perl -lnwe 'm{(\d+) deletion} and $deletions+=1; END{print $deletions}'
+
+# git log --format="%an" | sort | uniq | xargs -I 9 git log --author="9" --format="%an" --shortstat
+
+git log --format="%ae" | perl -lpwe 's{@.*}{}' | sort | uniq  > /tmp/authors
+
+authors=( `cat /tmp/authors` )
+
+echo > /tmp/deletions
+
+for author_name in "${authors[@]}"
+do
+    git log --author=$author_name --format="%ae" --shortstat | \
+        perl -nwe '
+             m{\b(\d+) insertion} and $insertions += $1 or $insertions += 0;
+
+             m{\b(\d+) deletion} and $deletions += $1 or $deletions += 0;
+
+             END{
+                 printf("%.1f", ($deletions/$insertions * 100));
+                 print qq{%\t};
+                 print qq{-$deletions\t+$insertions\t};
+             }
+        ' >> \
+        /tmp/deletions
+
+    echo "$author_name"  >> /tmp/deletions
+done
+
+echo 'Git Insertions and Deletions'
+echo
+
+sort -rn /tmp/deletions

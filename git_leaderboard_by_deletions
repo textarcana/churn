@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+logfile=`basename $0`.log
+
+# cf. http://stackoverflow.com/questions/13055685
+additions_and_deletions_per_author () {
+    AUTHOR=$1
+
+    git log --author="$AUTHOR" --shortstat | \
+        awk '/^ [0-9]/ { files_changed += $1; insertions += $4; deletions += $6 } \
+END { printf("%16d\t%16d\t%16d", files_changed, insertions, deletions) }'
+}
+
+list_all_authors () {
+    git log --format="%an" | sort -f | uniq
+}
+
+printf "%16s\t%16s\t%16s\t%16s\n" "author name" "files" "insertions" "deletions" > $logfile
+
+IFS=$'\n'
+for name in $(list_all_authors)
+do
+    printf "%16s\t%s\n" $name $(additions_and_deletions_per_author $name) >> $logfile
+done
+unset IFS
+
+head -n1 $logfile && \
+    tail -n +2 $logfile | sort -t$'\t' -nrk4
