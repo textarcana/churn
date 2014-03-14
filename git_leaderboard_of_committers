@@ -1,6 +1,33 @@
 #!/usr/bin/env bash
 
-source "`dirname $0`/../lib/bash/git_log.sh"
+# Exit if no argument given.
+if [ -z "$1" ] || [ -z "$2" ]
+then
+  echo "Usage:
+    `basename $0` <path> <days ago>
+
+eg: `basename $0`  ./repo/ 7"
+  exit 1
+fi
+
+test -e reports || mkdir reports
+
+CWD=`pwd`
+
+pushd $1 > /dev/null
+
+git log --date-order --since="-$2days ago" --format=%an | sort | uniq -c | sort -rn > reports/git_authors.log
+
+git log --date-order --since="-$2days ago" --format="% " --numstat . > reports/git_commits.log
+
+cat reports/git_commits.log | \
+    cut -f 3 | \
+    egrep -v '^$' \
+    > reports/git_log.log
+
+BRANCH=`git branch | grep \* | cut -d' ' -f2-`
+REV=`git log -n1 --format=%h`
+
 
 cat reports/git_authors.log | tee -a $CWD/reports/git_$BRANCH.log
 
