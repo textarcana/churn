@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+if [ -z "$1" ]
+then
+    echo "Show git commits since <date> (see Usage, below)
+          in a format suitable for analysis with gnuplot.
+
+Usage: accepts any argument that can be passed to 'git log --since'
+
+Eg:
+
+       `basename $0` yesterday
+
+       `basename $0` last friday
+"
+  exit 1
+fi
+
+git log --since="$@" \
+    --format="%ad" \
+    --date=short \
+    --date-order | \
+    uniq -c | \
+    awk '{print $2" "$1}'
