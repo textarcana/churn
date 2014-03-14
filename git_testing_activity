@@ -1,0 +1,36 @@
+#!/usr/bin/ruby -rubygems
+
+require 'time-lord'
+
+regex_for_git_hash = /^[a-e0-9]+$/
+count_of_commits = nil
+
+usage = %{\nUsage:
+\tgit_testing_activity <path> 7 days ago}
+
+raise usage if ARGV.empty? or ARGV.length < 2
+
+repo_path = ARGV.shift;
+time_window = ARGV.join ' '
+
+raise "Invalid path to Git repository: #{repo_path}" unless system %{test -d #{repo_path}}
+raise "Not a Git repository: #{repo_path}" unless system %{cd #{repo_path} && git status 2>&1> /dev/null}
+
+system %{cd #{repo_path}}
+
+raw_repo_name =  %x{cd #{repo_path} && git remote -v | grep origin | grep fetch}.strip
+repo_name = raw_repo_name.match(/.*?(\w+).git .*/)[1]
+
+result = %x{
+cd #{repo_path} &&
+git log --since='#{time_window}' --format='IGNORE %h' --numstat |
+    egrep -v '(IGNORE|files? changed)' |
+    egrep -i '\\btest\\b' |
+    awk '{print $3;}' |
+    sort |
+    uniq -c |
+    sort -rn
+}
+
+puts  %{#{result.lines.count} popular test files in the #{repo_name} repo, since #{time_window}.}
+puts result
