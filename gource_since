@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+
+uid=$RANDOM
+logfile=gource_git.log
+
+git log --since="$@" \
+    --pretty=format:user:%aN%n%at \
+    --raw \
+    --reverse \
+    --encoding=UTF-8 \
+    --no-renames \
+    > $logfile
+
+linecount=`wc -l $logfile | perl -lane 'print $F[0]'`
+
+if [ `test $linecount -lt $((10 ** 4))` ]
+then
+    seconds_per_day=10
+    user_scale=1
+    time_scale=1
+else
+    echo "`date '+%c %Z'`: INFO: Large git history detected..."
+    echo "`date '+%c %Z'`: INFO: Epic history mode activated!"
+    user_scale=3
+    seconds_per_day=1
+    time_scale=4.0
+fi
+
+test -d .git/avatar || \
+    echo "ERROR: Avatars are missing, please run bin/gource_gravatar_fetch"
+
+gource  \
+    --hash-seed 101121212345 \
+    --title `git symbolic-ref HEAD | cut -d'/' -f3` \
+    --key \
+    -1920x1080 \
+    --stop-at-end \
+    --file-idle-time 0 \
+    --max-files 0 \
+    --hide progress,mouse,tree \
+    --bloom-intensity 0.3 \
+    --auto-skip-seconds 1 \
+    --seconds-per-day $seconds_per_day \
+    --user-scale $user_scale \
+    --time-scale $time_scale \
+    --date-format "%B %d, %Y %Z" \
+    --multi-sampling \
+    --user-image-dir .git/avatar/ \
+    -o gource.ppm \
+    $logfile
+
+ffmpeg -y \
+    -r 60 \
+    -f image2pipe \
+    -vcodec ppm \
+    -i gource.ppm \
+    -vcodec libx264 \
+    -preset ultrafast \
+    -pix_fmt yuv420p \
+    -crf 1 \
+    -threads 0 \
+    -bf 0 \
+    gource.mp4
