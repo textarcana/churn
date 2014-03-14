@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+source "`dirname $0`/../lib/bash/git_log.sh"
+
+cat reports/git_authors.log | tee -a $CWD/reports/git_$BRANCH.log
+
+popd > /dev/null

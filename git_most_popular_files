@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+source "`dirname $0`/../lib/bash/git_log.sh"
+
+cat reports/git_log.log | sort | uniq -c | sort -rn | tee -a $CWD/reports/git_$BRANCH.log
+
+popd > /dev/null
