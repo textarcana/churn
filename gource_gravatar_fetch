@@ -1,6 +1,8 @@
 #!/usr/bin/perl
-#fetch Gravatars
-#see https://code.google.com/p/gource/wiki/GravatarExample
+# fetch Gravatars
+#
+# this script is a fork of code originally published here:
+# https://code.google.com/p/gource/wiki/GravatarExample
 
 use strict;
 use warnings;
