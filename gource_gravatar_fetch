@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 # fetch Gravatars
 #
 # this script is a fork of code originally published here:
